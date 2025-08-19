@@ -1,0 +1,179 @@
+-- Script: Manage 2017data database
+-- Purpose: Drop and recreate (or set to single-user) for initialization
+-- Environment: Microsoft SQL Server
+-- Author: Meron
+-- Date: 2025-08-18
+
+
+
+
+  -- Ensure we’re connected to the master database
+USE master;
+GO
+
+-- If the database exists, drop it
+IF EXISTS (SELECT 1 FROM sys.databases WHERE name = '2025data')
+BEGIN
+    ALTER DATABASE [2025data] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [2025data];
+END
+GO
+
+
+CREATE DATABASE [2025data];
+GO
+
+-- Use the database
+USE [2025data];
+GO
+-- 1) Create 12 schemas with sub-city name (space-free names)
+CREATE SCHEMA [Death];
+GO
+CREATE SCHEMA [Bole];
+GO
+CREATE SCHEMA [Akaki];
+GO
+CREATE SCHEMA [Gulele];
+GO
+CREATE SCHEMA [kolfe];
+GO
+CREATE SCHEMA [Nsilk];
+GO
+CREATE SCHEMA [Arada];
+GO
+CREATE SCHEMA [lemikura];
+GO
+CREATE SCHEMA [yeka];
+GO
+CREATE SCHEMA [addis ketema];
+GO
+CREATE SCHEMA [lideta];
+GO
+CREATE SCHEMA [kirkos];
+GO
+
+IF OBJECT_ID('[Death].[deathcrash]', 'U') IS NOT NULL
+DROP TABLE [Death].[deathcrash];
+GO
+
+CREATE TABLE [Death].[deathcrash](
+
+    [ID]     INT  NOT NULL,
+    [Lat]    FLOAT    NULL,
+    [Long]   FLOAT   NULL,
+    [level]  NVARCHAR(50)   NULL,
+    Subcity  NVARCHAR(50)   NULL,
+    location NVARCHAR(100)  NULL,
+    [Month]  NVARCHAR(50)   NULL,         
+    [Hour]   INT            NULL,
+	 [Day]   NVARCHAR(50)   NULL,
+
+    CONSTRAINT [PK_Death_deathcrash] PRIMARY KEY CLUSTERED ([ID])
+);
+GO
+IF OBJECT_ID('[Death].[deathvictim]', 'U') IS NOT NULL
+DROP TABLE [Death].[deathvictim];
+GO
+
+CREATE TABLE [Death].[deathvictim](
+   [ID]     INT  NOT NULL,
+   VEHID   INT   NULL,
+    VICID   INT   NULL,
+    SEX    VARCHAR(50)     NULL,
+    AGE     INT         NULL,
+    RUT     VARCHAR(50) NULL,
+    Vihicle  VARCHAR(100) NULL,
+    
+);
+GO
+PRINT'========================================================';
+
+PRINT 'Loading deathcrash data';
+
+PRINT'========================================================';
+
+
+PRINT '>> Truncating Table: [Death].[deathcrash]';
+		TRUNCATE TABLE[Death].[deathcrash];
+		PRINT '>> Inserting Data Into: [Death].[deathcrash]';
+		BULK INSERT [Death].[deathcrash]
+		FROM 'C:\Users\M\Desktop\2017.25 data\Death.crash.csv'
+		WITH (
+			FIRSTROW = 2,
+			FIELDTERMINATOR = ',',
+			TABLOCK
+		);
+PRINT'--------------------------------------------------------------------';
+
+PRINT 'Loading deathvictim data
+
+PRINT'--------------------------------------------------------------------';
+
+
+PRINT '>> Truncating Table: [Death].[deathvictim]';
+		TRUNCATE TABLE[Death].[deathvictim];
+		PRINT '>> Inserting Data Into: [Death].[deathvictim]';
+		BULK INSERT [Death].[deathvictim]
+		FROM 'C:\Users\M\Desktop\2017.25 data\Death.victim.csv'
+		WITH (
+			FIRSTROW = 2,
+			FIELDTERMINATOR = ',',
+			TABLOCK
+		);
+	 
+
+-- check for duplicate on the PK
+
+SELECT [ID]
+FROM [Death].[deathcrash]
+GROUP BY [ID]
+HAVING COUNT(*) > 1 OR [ID] IS NULL
+
+-- check data standardization and consistency
+
+SELECT DISTINCT SEX 
+
+FROM [Death].[deathvictim]
+
+CASE SEX
+
+CASE WHEN SEX = 913057368 THEN 'NULL'
+
+END
+
+
+SELECT DISTINCT  SEX
+FROM [Death].[deathvictim]
+
+SELECT DISTINCT
+  CASE
+    WHEN SEX = 'MALE' THEN 'MALE'
+	WHEN SEX = 'FEMALE' THEN 'FEMALE'
+    ELSE 'NULL'
+  END AS SEX
+FROM [Death].[deathvictim]
+
+SELECT * from [Death].[deathvictim]
+
+----Left join for the two table
+
+  SELECT
+  v.VEHID,
+  v.VICID,
+  v.SEX,
+  v.AGE,
+  v.RUT,
+  v.Vihicle,
+  c.Location,
+  c.[Lat],
+  c.[Long],
+  c.[level],
+  c.Subcity,
+  c.[Month],
+  c.[Hour],
+  c.[Day]
+FROM [Death].[deathvictim] AS v
+LEFT JOIN [Death].[deathcrash] AS c
+  ON v.id = c.id;
+
+-----------------END--------------
